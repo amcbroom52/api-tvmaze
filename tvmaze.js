@@ -4,6 +4,7 @@ const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
 const API_URL = "https://api.tvmaze.com";
+const NULL_IMAGE_URL = "https://tinyurl.com/tv-missing";
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -18,46 +19,26 @@ async function getShowsByTerm(term) {
   const params = new URLSearchParams({ q: term });
   const response = await fetch(`${API_URL}/search/shows?${params}`);
   const showsData = await response.json();
-  const showsList = [];
-
-  for (let show of showsData) {
-    const info = show.show;
-
-    const specificData = {
-      id: info.id,
-      name: info.name,
-      summary: info.summary,
-    };
-
-    if (info.image) {
-      specificData.image = info.image.medium;
-    } else {
-      specificData.image = info.image;
-    }
-
-    showsList.push(specificData);
-  }
+  const showsList = showsData.map(scrubData);
 
   return showsList;
+}
 
-  // return [
-  //   {
-  //     id: 1767,
-  //     name: "The Bletchley Circle",
-  //     summary:
-  //       `<p><b>The Bletchley Circle</b> follows the journey of four ordinary
-  //          women with extraordinary skills that helped to end World War II.</p>
-  //        <p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their
-  //          normal lives, modestly setting aside the part they played in
-  //          producing crucial intelligence, which helped the Allies to victory
-  //          and shortened the war. When Susan discovers a hidden code behind an
-  //          unsolved murder she is met by skepticism from the police. She
-  //          quickly realises she can only begin to crack the murders and bring
-  //          the culprit to justice with her former friends.</p>`,
-  //     image:
-  //         "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg"
-  //   }
-  // ]
+
+/**takes a showData object and scrubs the data to return an object with
+ * only {id, name, summary, image} */
+function scrubData(showData) {
+  const info = showData.show;
+
+  const specificData = {
+    id: info.id,
+    name: info.name,
+    summary: info.summary,
+  };
+
+  specificData.image = (info.image) ? info.image.medium : NULL_IMAGE_URL;
+
+  return specificData;
 }
 
 
@@ -74,8 +55,8 @@ function displayShows(shows) {
         <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="http://static.tvmaze.com/uploads/images/medium_portrait/160/401704.jpg"
-              alt="Bletchly Circle San Francisco"
+              src="${show.image}"
+              alt="${show.name}"
               class="w-25 me-3">
            <div class="media-body">
              <h5 class="text-primary">${show.name}</h5>
