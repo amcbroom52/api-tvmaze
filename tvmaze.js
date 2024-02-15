@@ -19,7 +19,7 @@ async function getShowsByTerm(term) {
   const params = new URLSearchParams({ q: term });
   const response = await fetch(`${API_URL}/search/shows?${params}`);
   const showsData = await response.json();
-  const showsList = showsData.map(scrubShowData);
+  const showsList = showsData.map(filterShowData);
 
   return showsList;
 }
@@ -27,7 +27,7 @@ async function getShowsByTerm(term) {
 
 /**takes a showData object and scrubs the data to return an object with
  * only {id, name, summary, image} */
-function scrubShowData(showData) {
+function filterShowData(showData) {
   const info = showData.show;
 
   const specificData = {
@@ -52,7 +52,7 @@ function displayShows(shows) {
 
   for (const show of shows) {
     const $show = $(`
-        <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
+        <div data-show-id="${show.id}" data-my-name="Kate" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
               src="${show.image}"
@@ -102,7 +102,7 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
 async function getEpisodesOfShow(id) {
   const response = await fetch(`${API_URL}/shows/${id}/episodes`);
   const episodesData = await response.json();
-  const episodesList = episodesData.map(scrubEpisodeData);
+  const episodesList = episodesData.map(filterEpisodeData);
 
   return episodesList;
 }
@@ -110,7 +110,7 @@ async function getEpisodesOfShow(id) {
 /**takes an episodeData object and scrubs the data to return an object with
 * only {id, name, season, number} */
 
-function scrubEpisodeData(episodeData) {
+function filterEpisodeData(episodeData) {    //filter
   const specificData = {
     id: episodeData.id,
     name: episodeData.name,
@@ -124,6 +124,7 @@ function scrubEpisodeData(episodeData) {
  * #episodesList unordered list*/
 
 function displayEpisodes(episodes) {
+  $("#episodesList").empty();
   for (let episode of episodes) {
     const $listElement = $(
       `<li> ${episode.name} (Season ${episode.season},
@@ -137,13 +138,13 @@ function displayEpisodes(episodes) {
 
 async function getEpisodesAndDisplay(id) {
   const episodes = await getEpisodesOfShow(id);
-  $("#episodesList").empty();
   displayEpisodes(episodes);
   $episodesArea.show();
 }
 
 $($showsList).on("click", "button", async function handleEpisodesReveal(evt) {
   const $btn = $(evt.target);
+  debugger;
   const showId = $btn
     .closest(".Show")
     .data()
