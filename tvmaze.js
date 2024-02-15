@@ -19,7 +19,7 @@ async function getShowsByTerm(term) {
   const params = new URLSearchParams({ q: term });
   const response = await fetch(`${API_URL}/search/shows?${params}`);
   const showsData = await response.json();
-  const showsList = showsData.map(scrubData);
+  const showsList = showsData.map(scrubShowData);
 
   return showsList;
 }
@@ -27,7 +27,7 @@ async function getShowsByTerm(term) {
 
 /**takes a showData object and scrubs the data to return an object with
  * only {id, name, summary, image} */
-function scrubData(showData) {
+function scrubShowData(showData) {
   const info = showData.show;
 
   const specificData = {
@@ -92,14 +92,63 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
 });
 
 
+
+
+
 /** Given a show ID, get from API and return (promise) array of episodes:
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id) {
+  const response = await fetch(`${API_URL}/shows/${id}/episodes`);
+  const episodesData = await response.json();
+  const episodesList = episodesData.map(scrubEpisodeData);
 
-/** Write a clear docstring for this function... */
+  return episodesList;
+}
 
-// function displayEpisodes(episodes) { }
+/**takes an episodeData object and scrubs the data to return an object with
+* only {id, name, season, number} */
+
+function scrubEpisodeData(episodeData) {
+  const specificData = {
+    id: episodeData.id,
+    name: episodeData.name,
+    season: episodeData.season,
+    number: episodeData.number,
+  };
+  return specificData;
+}
+
+/**takes an array of episode information and appends that info to the
+ * #episodesList unordered list*/
+
+function displayEpisodes(episodes) {
+  for (let episode of episodes) {
+    const $listElement = $(
+      `<li> ${episode.name} (Season ${episode.season},
+         Episode ${episode.number}</li>`
+    );
+    $("#episodesList").append($listElement);
+  }
+}
+
+/**handles episode display. Gets episode data from api and displays it*/
+
+async function getEpisodesAndDisplay(id) {
+  const episodes = await getEpisodesOfShow(id);
+  $("#episodesList").empty();
+  displayEpisodes(episodes);
+  $episodesArea.show();
+}
+
+$($showsList).on("click", "button", async function handleEpisodesReveal(evt) {
+  const $btn = $(evt.target);
+  const showId = $btn
+    .closest(".Show")
+    .data()
+    .showId;
+  await getEpisodesAndDisplay(showId);
+});
 
 // add other functions that will be useful / match our structure & design
